@@ -73,4 +73,4 @@ deploy:
   branch: master
 - type: git
   repo: https://gitcafe.com/jinwuzhao/jinwuzhao.git
-  branch: master
+  branch: gitcafe-pages
