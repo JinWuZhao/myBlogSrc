@@ -69,8 +69,8 @@ theme: yilia
 ## Docs: http://hexo.io/docs/deployment.html
 deploy:
 - type: git
-  repo: https://github.com/JinWuZhao/JinWuZhao.github.io.git
-  branch: master
-- type: git
   repo: https://gitcafe.com/jinwuzhao/jinwuzhao.git
   branch: gitcafe-pages
+- type: git
+  repo: https://github.com/JinWuZhao/JinWuZhao.github.io.git
+  branch: master
