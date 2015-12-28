@@ -1,5 +1,65 @@
 title: iOS符号化崩溃栈原理
 tags: iOS Dev
 ---
+## crash文件
+&emsp;&emsp;开发iOS应用的朋友们应该都接触过crash日志文件，它是应用崩溃产生的一种格式化的日志，里面包含了一些应用的基本信息以及崩溃时程序完整的函数调用栈信息。这些日志我们可以在连接iOS设备的时候获取到，也可以通过一些第三方库比如PLCrashReporter来生成。但是这个日志文件中只有很少一部分信息可读，比如bundle id，iOS系统版本，设备类别等等，最关键的信息函数调用栈则是一堆十六进制数字，只看这些东西也没有办法定位问题。幸好有现成的工具来帮我们解析这些数字，转化成可读的函数名称，这个过程就叫做符号化。比如Xcode中在devices window中查看连接设备的crash日志文件时一般都会自动呈现出调用的函数名称，一些第三方的统计工具比如友盟等可以一定程度上地给出符号化后的信息；一些不方便使用这些工具的场合比如PLCrashReporter生成的日志信息通过网络上传到服务器，由于我们不可能随时拿到客户的设备来连接Xcode分析，只能对照上传上来的日志信息手动进行符号化。
+
 ## 符号化crash文件
-开发iOS应用的朋友们应该都接触过crash日志文件，它是应用崩溃产生的一种格式化的日志，里面包含了一些应用的基本信息以及崩溃时程序完整的函数调用栈信息。这些日志我们可以在连接iOS设备的时候获取到，也可以通过一些第三方库比如PLCrashReporter来生成。但是这个日志文件中只有很少一部分信息可读，比如bundle id，iOS系统版本，设备类别等等，最关键的信息函数调用栈则是一堆十六进制数字，只看这些东西也没有办法定位问题。幸好有现成的工具来帮我们解析这些数字，转化成可读的函数名称，这个过程就叫做符号化。比如Xcode中在devices window中查看连接设备的crash日志文件时一般都会自动呈现出调用的函数名称，一些第三方的统计工具比如友盟等可以一定程度上地给出符号化后的信息；一些不方便使用这些工具的场合比如PLCrashReporter生成的日志信息通过网络上传到服务器，由于我们不可能随时拿到客户的设备来连接Xcode分析，只能对照上传上来的日志信息手动进行符号化。
+&emsp;&emsp;手动符号化之前我们需要先了解下crash文件的格式。下面是一段PLCrashReporter上传的崩溃日志：
+
+```python
+"""
+Hardware Model:      iPhone7,2
+Process:         YouDu [1672]
+Path:            /var/mobile/Containers/Bundle/Application/C957DEC3-3D47-463F-8217-38998BFDB2A4/YouDu.app/YouDu
+Identifier:      im.xinda.youdu
+Version:         11040
+Code Type:       ARM-64
+Parent Process:  ??? [1]
+
+Date/Time:       2015-12-28 04:09:24 +0000
+OS Version:      iPhone OS 9.2 (13C75)
+Report Version:  104
+
+Exception Type:  SIGSEGV
+Exception Codes: SEGV_ACCERR at 0x68
+Crashed Thread:  0
+
+Thread 0 Crashed:
+0   libsystem_platform.dylib            0x00000001827262a0 0x182724000 + 8864
+1   YouDu                               0x0000000100353254 0x100054000 + 3142228
+2   YouDu                               0x000000010034f3b0 0x100054000 + 3126192
+3   YouDu                               0x00000001003b4580 0x100054000 + 3540352
+4   YouDu                               0x00000001003b5bd8 0x100054000 + 3546072
+5   YouDu                               0x00000001003b23fc 0x100054000 + 3531772
+6   YouDu                               0x00000001001e10b0 0x100054000 + 1626288
+7   YouDu                               0x00000001001df9c4 0x100054000 + 1620420
+8   YouDu                               0x00000001001d4ef8 0x100054000 + 1576696
+9   YouDu                               0x00000001001d0e60 0x100054000 + 1560160
+10  YouDu                               0x00000001001cf814 0x100054000 + 1554452
+11  YouDu                               0x00000001001d84e8 0x100054000 + 1590504
+12  YouDu                               0x00000001001c5be4 0x100054000 + 1514468
+13  libdispatch.dylib                   0x0000000182519630 0x182518000 + 5680
+14  libdispatch.dylib                   0x00000001825195f0 0x182518000 + 5616
+15  libdispatch.dylib                   0x000000018251ecf8 0x182518000 + 27896
+16  CoreFoundation                      0x0000000182a7cbb0 0x1829a0000 + 904112
+17  CoreFoundation                      0x0000000182a7aa18 0x1829a0000 + 895512
+18  CoreFoundation                      0x00000001829a9680 0x1829a0000 + 38528
+19  GraphicsServices                    0x0000000183eb8088 0x183eac000 + 49288
+20  UIKit                               0x0000000187820d90 0x1877a4000 + 511376
+21  YouDu                               0x000000010010d11c 0x100054000 + 758044
+22  ???                                 0x000000018254a8b8 0x0 + 0
+...
+
+Binary Images:
+    0x100054000 -        0x1004dffff +YouDu arm64  <a06aad691a153eef8fbc3d83459f5649> /var/mobile/Containers/Bundle/Application/C957DEC3-3D47-463F-8217-38998BFDB2A4/YouDu.app/YouDu
+    0x1820b4000 -        0x1820b5fff  libSystem.B.dylib arm64  <c4cd04b37e5f34698856a9384aefff40> /usr/lib/libSystem.B.dylib
+    0x1820b8000 -        0x18210bfff  libc++.1.dylib arm64  <d430d0ad16893b76bbc52468f65d5906> /usr/lib/libc++.1.dylib
+    0x18210c000 -        0x18212bfff  libc++abi.dylib arm64  <1c0a8ef87e8c37b2a577dc1a44e2b16e> /usr/lib/libc++abi.dylib
+    0x18212c000 -        0x182498fff  libobjc.A.dylib arm64  <da8e482b3e7d3c40a798a0c86a3d6890> /usr/lib/libobjc.A.dylib
+    0x18249c000 -        0x1824a0fff  libcache.dylib arm64  <242f50f854a1301fa6f76b4531101238> /usr/lib/system/libcache.dylib
+    0x1824a4000 -        0x1824affff  libcommonCrypto.dylib arm64  <f995fe44b0483f699bf9cfb570726bb3> /usr/lib/system/libcommonCrypto.dylib
+...
+"""
+```
+&emsp;&emsp;
