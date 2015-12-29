@@ -1,13 +1,12 @@
-title: iOS符号化崩溃栈原理
-tags: iOS Dev
----
-## crash文件
-&emsp;&emsp;开发iOS应用的朋友们应该都接触过crash日志文件，它是应用崩溃产生的一种格式化的日志，里面包含了一些应用的基本信息以及崩溃时程序完整的函数调用栈信息。这些日志我们可以在连接iOS设备的时候获取到，也可以通过一些第三方库比如PLCrashReporter来生成。但是这个日志文件中只有很少一部分信息可读，比如bundle id，iOS系统版本，设备类别等等，最关键的信息函数调用栈则是一堆十六进制数字，只看这些东西也没有办法定位问题。幸好有现成的工具来帮我们解析这些数字，转化成可读的函数名称，这个过程就叫做符号化。比如Xcode中在devices window中查看连接设备的crash日志文件时一般都会自动呈现出调用的函数名称，一些第三方的统计工具比如友盟等可以一定程度上地给出符号化后的信息；一些不方便使用这些工具的场合比如PLCrashReporter生成的日志信息通过网络上传到服务器，由于我们不可能随时拿到客户的设备来连接Xcode分析，只能对照上传上来的日志信息手动进行符号化。
-
-## 符号化crash文件
-&emsp;&emsp;手动符号化之前我们需要先了解下crash文件的格式。下面是一段PLCrashReporter上传的崩溃日志：
-
-```python
+#+TITLE: iOS符号化崩溃栈原理
+#+TAGS: iOS-Dev
+#+LAYOUT: draft
+#+OPTIONS: toc:nil
+* crash文件
+开发iOS应用的朋友们应该都接触过crash日志文件，它是应用崩溃产生的一种格式化的日志，里面包含了一些应用的基本信息以及崩溃时程序完整的函数调用栈信息。这些日志我们可以在连接iOS设备的时候获取到，也可以通过一些第三方库比如PLCrashReporter来生成。但是这个日志文件中只有很少一部分信息可读，比如bundle id，iOS系统版本，设备类别等等，最关键的信息函数调用栈则是一堆十六进制数字，只看这些东西也没有办法定位问题。幸好有现成的工具来帮我们解析这些数字，转化成可读的函数名称，这个过程就叫做符号化。比如Xcode中在devices window中查看连接设备的crash日志文件时一般都会自动呈现出调用的函数名称，一些第三方的统计工具比如友盟等可以一定程度上地给出符号化后的信息；一些不方便使用这些工具的场合比如PLCrashReporter生成的日志信息通过网络上传到服务器，由于我们不可能随时拿到客户的设备来连接Xcode分析，只能对照上传上来的日志信息手动进行符号化。
+* 符号化crash文件
+手动符号化之前我们需要先了解下crash文件的格式。下面是一段PLCrashReporter上传的崩溃日志：
+#+BEGIN_SRC python
 """
 Hardware Model:      iPhone7,2
 Process:         YouDu [1672]
@@ -61,5 +60,4 @@ Binary Images:
     0x1824a4000 -        0x1824affff  libcommonCrypto.dylib arm64  <f995fe44b0483f699bf9cfb570726bb3> /usr/lib/system/libcommonCrypto.dylib
 ...
 """
-```
-&emsp;&emsp;
+#+END_SRC

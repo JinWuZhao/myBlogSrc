@@ -1,0 +1,11 @@
+#+TITLE: Hello,orgmode
+#+TAGS: test
+#+LAYOUT: draft
+#+OPTIONS: toc:nil
+* Orgmode
+** Why org
+#+BEGIN_SRC js
+console.log('hello');
+exit(0);
+#+END_SRC
+我编不下去了。。
