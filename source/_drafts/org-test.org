@@ -2,6 +2,7 @@
 #+TAGS: test
 #+LAYOUT: draft
 #+OPTIONS: toc:nil
+#+OPTIONS: \n:t
 * Orgmode
 ** Why org
 #+BEGIN_SRC js
@@ -9,3 +10,43 @@ console.log('hello');
 exit(0);
 #+END_SRC
 我编不下去了。。
+
+* hello
+** hi <<my-anchor>>
+[[https://jinwuzhao.github.io][myBlog]]
+[[my-anchor][内部链接]]
+*粗体*
+/斜体/
++删除线+
+_下划线_
+H_2 O
+E=mc^2
+=git=
+~git~
+| num/user | name | gender |
+|----------+------+--------|
+|        1 | mike | male   |
+|        2 | jin  | male   |
+
+1. 有序列表1
+   + 无序列表1
+   + 无序列表2 :: 描述
+2. 有序列表2
+   - Sean Austin :: 描述列表
+
+* tables
+
+| name  | phone |   age |
+|-------+-------+-------|
+| peter | 123   |    17 |
+| anna  | 23123 |    12 |
+|-------+-------+-------|
+| sdf   | sdf   |   123 |
+| 123   | sdf   |   sdf |
+|-------+-------+-------|
+| sdf   | sdf   | 12323 |
+
+
+
+
+
